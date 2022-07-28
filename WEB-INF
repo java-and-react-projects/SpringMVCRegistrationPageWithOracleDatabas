@@ -1,0 +1,87 @@
+web.xml
+
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee
+                             http://xmlns.jcp.org/xml/ns/javaee/web-app.xsd"
+	version="4.0">
+
+	<display-name>RegistrationForm</display-name>
+	 <welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+		
+	</welcome-file-list> 
+
+	<servlet>
+		<servlet-name>dispatcher</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+
+
+		<!-- <init-param> -->
+		<!-- <param-name>contextConfigLocation</param-name> -->
+		<!-- <param-value>/WEB-INF/SpringDemo-servlet.xml</param-value> -->
+		<!-- </init-param> -->
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>dispatcher</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>s
+
+</web-app>
+
+
+
+
+
+
+dispatcher-servlet.xml
+
+
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+-<beans xsi:schemaLocation=" http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" xmlns:context="http://www.springframework.org/schema/context" xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.springframework.org/schema/beans">
+
+<mvc:annotation-driven/>
+
+<context:component-scan base-package="com.oracle"/>
+
+
+-<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+
+<property value="/" name="prefix"/>
+
+<property value=".jsp" name="suffix"/>
+
+</bean>
+
+<context:property-placeholder location="classpath:common.properties"/>
+
+
+-<bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" id="dataSource">
+
+<property value="${db.driver}" name="driverClassName"/>
+
+<property value="${db.url}" name="url"/>
+
+<property value="${db.user}" name="username"/>
+
+<property value="${db.password}" name="password"/>
+
+</bean>
+
+
+-<bean class="org.springframework.jdbc.core.JdbcTemplate" id="jdbcTemplate">
+
+<constructor-arg ref="dataSource"/>
+
+</bean>
+
+</beans>
