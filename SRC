@@ -1,0 +1,354 @@
+User.java
+
+package com.oracle;
+
+public class User {
+
+	private String firstName;
+	private String lastName;
+
+	private String userName;
+	private String email;
+	private String password;
+	private String confirmPassword;
+
+
+	private String dob;
+	private String gender;
+	private String address;
+
+	public User() {
+		super();
+	}
+
+	public User(String firstName,String lastName, String userName, String email, String password, String confirmPassword, String dob, String gender,
+			String address) {
+		super();
+		
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.userName = userName;
+		this.email = email;
+		this.password = password;
+		this.confirmPassword = confirmPassword;
+		this.dob = dob;
+		this.gender = gender;
+		this.address = address;
+	}
+
+	
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public String getConfirmPassword() {
+		return confirmPassword;
+	}
+
+	public void setConfirmPassword(String conformPassword) {
+		this.confirmPassword = conformPassword;
+	}
+	public String getDob() {
+		return dob;
+	}
+
+	public void setDob(String dob) {
+		this.dob = dob;
+	}
+
+	public String getGender() {
+		return gender;
+	}
+
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+
+	public String getAddress() {
+		return address;
+	}
+
+	public void setAddress(String address) {
+		this.address = address;
+	}
+}
+
+
+UserController.java
+
+
+package com.oracle;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.oracle.User;
+import com.oracle.UserService;
+
+@Controller
+
+public class UserController {
+
+	@Autowired
+	UserService userService;
+	User user;
+
+	@RequestMapping(value = "/")
+	public ModelAndView home(Model model) {
+
+		User user = new User();
+		model.addAttribute("user", user);
+		ModelAndView modelAndView = new ModelAndView("login");
+		System.out.println("Test @22");
+		return modelAndView;
+	}
+
+	@RequestMapping(value = "/showLogin")
+	public String showLogin(Model model) {
+		model.addAttribute("user", new User());
+
+		System.out.println("Test 2");
+		return "login";
+	}
+
+	@RequestMapping(value = "/showRegister")
+	public String showRegister(Model model) {
+
+		System.out.println("registration execute");
+		model.addAttribute("user", new User());
+		return "register";
+	}
+
+	@RequestMapping(value = "/register")
+	public String register(@ModelAttribute("user") User user, Model model) {
+		int valid = userService.registerUser(user);
+
+		System.out.println("test");
+		if (valid == 2) {
+			model.addAttribute("message", "All field are mandatory");
+			return "success";
+		}
+		if (valid == 5) {
+			model.addAttribute("message", "UserName  already exist in database! Please try another UserName");
+			return "register";
+		}
+
+		if (valid == 9) {
+			model.addAttribute("message", "Email id already exist in database! Please try another Email id");
+			return "register";
+		} else
+			model.addAttribute("message", "Registered Successfully");
+		return "Reg_success";
+	}
+
+	@RequestMapping(value = "/login")
+	public String login(@ModelAttribute("user") User user, Model model) {
+		User user1 = userService.loginUser(user);
+		// System.out.println("Test 3");
+		if (user1 != null) {
+			// System.out.println("test 4");
+			model.addAttribute("user", user1);
+			model.addAttribute("message", "Login successfully");
+			return "log_success";
+		}
+		model.addAttribute("message", "Invalid Credentials! Please try again");
+		return "login";
+
+	}
+
+}
+
+
+
+UserDao.java
+
+
+package com.oracle;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.Calendar;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.jdbc.core.RowMapper;
+
+import com.oracle.User;
+
+@Component("userDao")
+public class UserDao {
+
+	@Autowired
+	JdbcTemplate jdbcTemplate;
+
+	public int registerUser(User user) {
+		
+  System.out.println(user.getGender());
+		if (user.getFirstName() == "" || user.getLastName() == "" || user.getUserName() == "" || user.getEmail() == "" || user.getPassword() == ""
+				|| user.getConfirmPassword() == "" || user.getDob() == ""
+				 || user.getAddress() == "")
+			return 2;
+		
+		if (isUserNameExists(user.getUserName())) {
+			return 5;
+		}
+		if (isEmailIdExists(user.getEmail())) {
+			return 9;
+		}
+
+		String sql = "INSERT INTO Users (FIRSTNAME, LASTNAME, USERNAME, PASSWORD, EMAIL, DOB, GENDER, ADDRESS)"
+				+ " VALUES (?, ?, ?, ?, ?, ?,?, ?)";
+
+		try {
+
+			int num = jdbcTemplate.update(sql, user.getFirstName(),user.getLastName(), user.getUserName(), user.getPassword(), user.getEmail(),
+					user.getDob(), user.getGender(), user.getAddress());
+ 		return num;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			return 0;
+		}
+	}
+
+	
+
+
+	private boolean isUserNameExists(String userName) {
+		// TODO Auto-generated method stub
+		String sql = "select * from Users where USERNAME='" + userName + "'";
+		User users = null;
+		try {
+			users = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<User>(User.class));
+			if (users != null)
+				return true;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return false;
+	}
+		
+	
+	private boolean isEmailIdExists(String email) {
+		String sql = "select * from Users where EMAIL='" + email + "'";
+		User users = null;
+		try {
+			users = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<User>(User.class));
+			if (users != null)
+				return true;
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+
+		return false;
+	}
+
+
+	public User loginUser(User user) {
+		String sql = "select * from Users where USERNAME='" + user.getUserName() + "' and password='"
+				+ user.getPassword() + "'";
+		User users = null;
+		try {
+			users = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<User>(User.class));
+			return users;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return users;
+	}
+
+}
+
+
+
+
+
+UserService.java
+
+
+
+package com.oracle;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+
+import com.oracle.UserDao;
+import com.oracle.User;
+
+@Component("userService")
+
+public class UserService {
+	
+
+
+		 @Autowired
+		 UserDao userDao;
+		 
+		public int registerUser(User user) {
+			//System.out.println("TestService");
+			return userDao.registerUser(user);
+
+		}
+
+		public User loginUser(User user) {
+			
+			return userDao.loginUser(user);
+		}
+
+	}
+
+
+
+
+
+
